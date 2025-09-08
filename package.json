@@ -1,0 +1,93 @@
+{
+  "name": "ushur-automation-test-framework",
+  "version": "1.0.1",
+  "description": "A comprehensive automation framework for UI, API, Accessibility, Security, and Performance testing",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node run-playwright.cjs",
+    "test:local": "node run-playwright.cjs --env=local",
+    "test:accessibility": "node run-playwright.cjs src/tests/accessibility",
+    "test:local:accessibility": "node run-playwright.cjs src/tests/accessibility --env=local",
+    "test:api": "node run-playwright.cjs src/tests/api",
+    "test:local:api": "node run-playwright.cjs src/tests/api --env=local",
+    "test:customer": "node run-playwright.cjs src/tests/customer",
+    "test:local:customer": "node run-playwright.cjs src/tests/customer --env=local",
+    "test:e2e": "node run-playwright.cjs src/tests/e2e",
+    "test:local:e2e": "node run-playwright.cjs src/tests/e2e --env=local",
+    "test:integration": "node run-playwright.cjs src/tests/integration",
+    "test:local:integration": "node run-playwright.cjs src/tests/integration --env=local",
+    "test:performance": "node run-playwright.cjs src/tests/performance",
+    "test:local:performance": "node run-playwright.cjs src/tests/performance --env=local",
+    "test:security": "node run-playwright.cjs src/tests/security",
+    "test:local:security": "node run-playwright.cjs src/tests/security --env=local",
+    "test:ui": "node run-playwright.cjs src/tests/ui",
+    "test:local:ui": "node run-playwright.cjs src/tests/ui --env=local",
+    "install:browsers": "playwright install --with-deps",
+    "report:open": "playwright show-report reports/html",
+    "report:generate": "playwright test --reporter=html",
+    "lint": "prettier --check .",
+    "format": "prettier --write --print-width 120 .",
+    "type-check": "tsc --noEmit",
+    "build": "tsc",
+    "clean": "rm -rf test-results playwright-report reports/test-results reports/html reports/screenshots reports/videos reports/traces reports/logs dist",
+    "setup": "npm install && npm run install:browsers",
+    "validate": "npm run type-check && npm run lint",
+    "node:version": "node --version",
+    "eslint": "eslint 'src/**/*.{ts,tsx}'",
+    "eslint:fix": "eslint 'src/**/*.{ts,tsx}' --fix"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "testing",
+    "automation",
+    "enterprise",
+    "ui-testing",
+    "api-testing",
+    "accessibility",
+    "security",
+    "performance",
+    "e2e",
+    "qa",
+    "test-framework"
+  ],
+  "author": "Anand Sogalad",
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/enterprise/test-automation-framework"
+  },
+  "homepage": "https://github.com/enterprise/test-automation-framework#readme",
+  "bugs": {
+    "url": "https://github.com/enterprise/test-automation-framework/issues"
+  },
+  "devDependencies": {
+    "@playwright/mcp": "^0.0.29",
+    "@playwright/test": "^1.53.0",
+    "@types/axios": "^0.9.36",
+    "@types/mime-types": "^3.0.1",
+    "@types/minimist": "^1.2.5",
+    "@types/node": "^24.3.0",
+    "@types/uuid": "^10.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.37.0",
+    "eslint": "^9.31.0",
+    "minimist": "^1.2.8",
+    "prettier": "^3.5.3",
+    "typescript": "^5.8.3",
+    "zod": "^3.25.76"
+  },
+  "dependencies": {
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "form-data": "^4.0.4",
+    "ioredis": "^5.6.1",
+    "mime-types": "^3.0.1",
+    "tsconfig-paths": "^4.2.0",
+    "uuid": "^11.1.0"
+  }
+}
