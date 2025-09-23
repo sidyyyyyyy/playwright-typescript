@@ -8,7 +8,7 @@ export async function nextUserReply(agentMessage: string, persona: Persona): Pro
   
   const simulator = new RoboSimulator(persona, adapter, {
     model: 'gpt-4o-mini',
-    temperature: 0.7,
+    temperature: 0.5,
     maxTurns: 1
   });
   
@@ -33,9 +33,11 @@ export function createPersonaFromTestData(testData: any): Persona {
       'email': memberInfo.email
     },
     goals: testData.testCases?.[0]?.goals || [
-      'Successfully authenticate member',
-      'Update member address', 
-      'Provide clear confirmation'
+      'authenticate member if asked',
+      'ask a question related to health plan',
+      'Update address', 
+      'Provide clear confirmation',
+      'end conversation if its unable to help with the request'
     ],
     goodbye_phrase: 'Thank you for your help!',
     style: {

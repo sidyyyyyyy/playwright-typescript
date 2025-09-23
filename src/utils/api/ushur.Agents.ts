@@ -20,6 +20,7 @@ type AgentArgs = {
   empathy?: string;
   readability?: string;
   personaProps?: Partial<{ tone: string; formality: string; empathy: string; readability: string }>;
+  additionalTasks?: Array<{ id: string; name: string; type: string }>;
 };
 
 
@@ -167,13 +168,13 @@ export function getCustomArgs(): AgentArgs {
   };
 }
 
-export async function createAndActivateAgent(instance: string, token: string, agentConfig: any, accountEmail: string) {
+export async function createAndActivateAgent(instance: string, token: string, agentConfig: any, accountEmail: string, customArgs?: AgentArgs) {
   const headers = {
     'Content-Type': 'application/json',
     token
   };
 
-  const args = getCustomArgs();
+  const args = customArgs || getCustomArgs();
 
 const enterpriseSettingsUrl = `https://${instance}${agentConfig.end_points.enterpriseSettings}`;
 const enterprisePayload = { ...agentConfig.enterprise_setting, userName: accountEmail,};
@@ -222,6 +223,30 @@ if (!oc[tIdx].type) oc[tIdx].type = 'Tasks';
 
 if (args.taskId)   oc[tIdx].id   = args.taskId;
 if (args.taskName) oc[tIdx].name = args.taskName;  
+
+// Add additional tasks if provided
+if (args.additionalTasks && args.additionalTasks.length > 0) {
+  args.additionalTasks.forEach(task => {
+    // Check if task already exists
+    const existingTaskIndex = oc.findIndex((c: any) => c?.id === task.id);
+    if (existingTaskIndex === -1) {
+      // Add new task capability
+      oc.push({
+        id: task.id,
+        name: task.name,
+        type: task.type
+      });
+    } else {
+      // Update existing task
+      oc[existingTaskIndex] = {
+        ...oc[existingTaskIndex],
+        id: task.id,
+        name: task.name,
+        type: task.type
+      };
+    }
+  });
+}
 
 agentPayload.agentPersona.properties = {
   ...agentPayload.agentPersona.properties,

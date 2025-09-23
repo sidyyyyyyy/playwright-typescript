@@ -1,0 +1,343 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Health Plan Member Management API",
+    "version": "1.0.0",
+    "description": "API for Health Plan Member Management including address updates, member verification, and account management",
+    "contact": {
+      "name": "Health Plan API Support",
+      "email": "api-support@healthplan.com"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.healthplan.com/v1",
+      "description": "Production server"
+    },
+    {
+      "url": "https://staging-api.healthplan.com/v1",
+      "description": "Staging server"
+    }
+  ],
+  "paths": {
+    "/api/member/verify": {
+      "post": {
+        "summary": "Verify member identity",
+        "description": "Verify member using Member ID and date of birth",
+        "operationId": "verifyMember",
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Z0-9]{8,12}$"
+            },
+            "description": "Member ID (8-12 alphanumeric characters)"
+          },
+          {
+            "name": "dateOfBirth",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Date of birth in YYYY-MM-DD format"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member verified successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberVerificationResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request parameters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Member not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/address/update": {
+      "post": {
+        "summary": "Update member address",
+        "description": "Update member's current address information",
+        "operationId": "updateAddress",
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Member ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddressUpdateRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Address updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddressUpdateResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid address data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - member not verified",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/member/profile": {
+      "get": {
+        "summary": "Get member profile",
+        "description": "Retrieve member profile information",
+        "operationId": "getMemberProfile",
+        "parameters": [
+          {
+            "name": "memberId",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Member ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Member profile retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberProfile"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Member not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MemberVerificationResponse": {
+        "type": "object",
+        "properties": {
+          "verified": {
+            "type": "boolean",
+            "description": "Whether the member verification was successful"
+          },
+          "memberId": {
+            "type": "string",
+            "description": "Verified member ID"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "Member's first name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Member's last name"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Member's email address"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Member's phone number"
+          }
+        },
+        "required": ["verified", "memberId"]
+      },
+      "AddressUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "street": {
+            "type": "string",
+            "description": "Street address",
+            "minLength": 5,
+            "maxLength": 100
+          },
+          "city": {
+            "type": "string",
+            "description": "City name",
+            "minLength": 2,
+            "maxLength": 50
+          },
+          "state": {
+            "type": "string",
+            "description": "State code",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "zipCode": {
+            "type": "string",
+            "description": "ZIP code",
+            "pattern": "^[0-9]{5}(-[0-9]{4})?$"
+          },
+          "country": {
+            "type": "string",
+            "description": "Country code",
+            "default": "US",
+            "pattern": "^[A-Z]{2}$"
+          }
+        },
+        "required": ["street", "city", "state", "zipCode"]
+      },
+      "AddressUpdateResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the address update was successful"
+          },
+          "message": {
+            "type": "string",
+            "description": "Response message"
+          },
+          "updatedAddress": {
+            "$ref": "#/components/schemas/AddressUpdateRequest"
+          },
+          "confirmationNumber": {
+            "type": "string",
+            "description": "Confirmation number for the address update"
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date",
+            "description": "Date when the address change becomes effective"
+          }
+        },
+        "required": ["success", "message"]
+      },
+      "MemberProfile": {
+        "type": "object",
+        "properties": {
+          "memberId": {
+            "type": "string",
+            "description": "Member ID"
+          },
+          "firstName": {
+            "type": "string",
+            "description": "First name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date",
+            "description": "Date of birth"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address"
+          },
+          "phoneNumber": {
+            "type": "string",
+            "description": "Phone number"
+          },
+          "currentAddress": {
+            "$ref": "#/components/schemas/AddressUpdateRequest"
+          },
+          "planType": {
+            "type": "string",
+            "description": "Health plan type",
+            "enum": ["Basic", "Standard", "Premium", "Family"]
+          },
+          "memberSince": {
+            "type": "string",
+            "format": "date",
+            "description": "Member since date"
+          }
+        },
+        "required": ["memberId", "firstName", "lastName", "dateOfBirth"]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message"
+          },
+          "code": {
+            "type": "string",
+            "description": "Error code"
+          },
+          "details": {
+            "type": "string",
+            "description": "Additional error details"
+          }
+        },
+        "required": ["error", "code"]
+      }
+    }
+  }
+}

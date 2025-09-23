@@ -1,0 +1,63 @@
+{
+  "id_card_download": {
+    "background": "I'm a health plan member who needs to download my ID card for a doctor's appointment tomorrow.",
+    "goals": [
+      "Download my ID card",
+      "Verify my address information", 
+      "Complete the download process successfully"
+    ],
+    "info": {
+      "name": "John Smith",
+      "member_id": "M123456789",
+      "address": "123 Main Street, Anytown, CA 90210",
+      "phone": "555-123-4567",
+      "email": "john.smith@email.com"
+    }
+  },
+  "policy_update": {
+    "background": "I need to update my health insurance policy because I recently got married and want to add my spouse.",
+    "goals": [
+      "Update policy information",
+      "Add spouse to coverage",
+      "Verify new premium amounts"
+    ],
+    "info": {
+      "name": "Sarah Johnson",
+      "member_id": "M987654321",
+      "current_address": "456 Oak Avenue, Somewhere, NY 10001",
+      "spouse_name": "Michael Johnson",
+      "marriage_date": "2024-06-15"
+    }
+  },
+  "claim_inquiry": {
+    "background": "I submitted a claim for a specialist visit last month but haven't received any updates.",
+    "goals": [
+      "Check claim status",
+      "Understand why it's taking so long",
+      "Get estimated processing time"
+    ],
+    "info": {
+      "name": "David Wilson",
+      "member_id": "M555666777",
+      "claim_number": "CLM2024001",
+      "service_date": "2024-07-20",
+      "provider": "Dr. Emily Chen, Cardiology"
+    }
+  },
+  "benefits_explanation": {
+    "background": "I'm confused about what's covered under my plan and need help understanding my benefits.",
+    "goals": [
+      "Understand coverage details",
+      "Learn about copays and deductibles",
+      "Find in-network providers"
+    ],
+    "info": {
+      "name": "Lisa Brown",
+      "member_id": "M111222333",
+      "plan_type": "PPO",
+      "effective_date": "2024-01-01",
+      "family_size": 3
+    }
+  }
+}
+

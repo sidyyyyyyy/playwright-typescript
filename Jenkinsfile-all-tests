@@ -1,0 +1,111 @@
+pipeline {
+  agent {
+    kubernetes {
+      cloud 'zenith-quality-eks'
+      yaml '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: playwright
+      image: mcr.microsoft.com/playwright:v1.54.1-jammy
+      command:
+        - cat
+      tty: true
+  restartPolicy: Never
+'''
+    }
+  }
+  
+  options {
+    skipDefaultCheckout()
+    timestamps()
+  }
+  
+  stages {
+    stage('Checkout') {
+      steps {
+        echo "→ Checking out R2D2_Sanity_Suite branch"
+        checkout scmGit(
+          branches: [[name: "*/R2D2_Sanity_Suite"]],
+          userRemoteConfigs: [[
+            url: 'https://github.com/UshurInc/Automation_Infra',
+            credentialsId: 'devopsushur'
+          ]],
+          extensions: [
+            [$class: 'RelativeTargetDirectory', relativeTargetDir: 'Automation_Infra']
+          ]
+        )
+        script {
+          sh 'echo "→ Repo URL: $(git remote get-url origin)"'
+          sh 'echo "→ Branch: $(git branch --show-current)"'
+          sh 'echo "→ Commit SHA: $(git rev-parse HEAD)"'
+          sh 'echo "→ Current directory: $(pwd)"'
+          sh 'echo "→ Contents: $(ls -la)"'
+        }
+      }
+    }
+    
+    stage('Install & Test') {
+      steps {
+        container('playwright') {
+          // invoke bash to support pipefail under /bin/sh
+          sh """
+bash << 'EOF'
+set -euxo pipefail
+# Navigate to playwright-typescript folder
+echo "→ Navigating to playwright-typescript folder..."
+cd Automation_Infra/playwright-typescript
+echo "→ Current directory: $(pwd)"
+echo "→ Contents: $(ls -la)"
+
+# Install Node deps and browser binaries
+echo "→ Installing Node.js dependencies..."
+npm install
+
+echo "→ Installing Playwright browsers..."
+npx playwright install
+
+# Ensure system dependencies for Playwright browsers
+echo "→ Installing system dependencies..."
+npx playwright install-deps
+
+# Execute all test cases
+echo "→ Running all test cases..."
+npx playwright test src/tests/
+EOF
+"""
+        }
+        script {
+          echo '→ Raw test-results/.last-run.json:'
+          sh 'cat Automation_Infra/playwright-typescript/test-results/.last-run.json'
+          def summary = readJSON file: 'Automation_Infra/playwright-typescript/test-results/.last-run.json'
+          echo "→ Playwright status: ${summary.status}"
+          echo "→ Total tests: ${summary.totalTests}"
+          echo "→ Passed tests: ${summary.passedTests}"
+          echo "→ Failed tests: ${summary.failedTests}"
+          echo "→ Skipped tests: ${summary.skippedTests}"
+        }
+      }
+    }
+  }
+  
+  post {
+    always {
+      archiveArtifacts artifacts: 'Automation_Infra/playwright-typescript/test-results/**/*', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'Automation_Infra/playwright-typescript/playwright-report/**/*', allowEmptyArchive: true
+      archiveArtifacts artifacts: 'Automation_Infra/playwright-typescript/reports/**/*', allowEmptyArchive: true
+      
+      script {
+        if (fileExists('Automation_Infra/playwright-typescript/test-results/.last-run.json')) {
+          def summary = readJSON file: 'Automation_Infra/playwright-typescript/test-results/.last-run.json'
+          if (summary.status != 'passed') {
+            error "Playwright tests failed (status: ${summary.status})."
+          }
+        }
+      }
+      echo ":white_check_mark: Pipeline ${env.JOB_NAME} #${env.BUILD_NUMBER} complete."
+    }
+  }
+}
+

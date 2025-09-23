@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  agent-evaluation-tests:
+    build: .
+    environment:
+      - NODE_ENV=production
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=0
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+      - ./screenshots:/app/screenshots
+    command: ["./run-tests.sh", "both", "chromium", "true"]
+    
+  # Service for running specific test suites
+  client-services-test:
+    build: .
+    environment:
+      - NODE_ENV=production
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=0
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+    command: ["./run-tests.sh", "client-services", "chromium", "true"]
+    
+  robo-sim-test:
+    build: .
+    environment:
+      - NODE_ENV=production
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=0
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+    command: ["./run-tests.sh", "robo-sim", "chromium", "true"]
+    
+  # Service for running tests in headed mode (for debugging)
+  debug-tests:
+    build: .
+    environment:
+      - NODE_ENV=production
+      - CI=true
+      - PLAYWRIGHT_BROWSERS_PATH=0
+    env_file:
+      - .env
+    volumes:
+      - ./reports:/app/reports
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+    command: ["./run-tests.sh", "both", "chromium", "false"]
+    network_mode: host

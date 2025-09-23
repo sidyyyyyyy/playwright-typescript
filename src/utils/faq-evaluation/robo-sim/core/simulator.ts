@@ -42,26 +42,43 @@ export class RoboSimulator {
   }
 
   private gateSensitive(userText: string, lastAgent: string): string {
+    console.log(`🔍 GateSensitive Debug:`);
+    console.log(`   Agent message: "${lastAgent}"`);
+    console.log(`   User response: "${userText}"`);
+    
     const NEEDLES = {
-      'member id': /\b(member\s*id|id)\b/i,
-      'date of birth': /\b(dob|date\s*of\s*birth|birthday)\b/i,
-      'address': /\b(address|where\s*do\s*you\s*live|residential)\b/i
+      'member id': /\b(member\s*id|member\s*number|your\s*id|id\s*number|id|member\s*number)\b/i,
+      'date of birth': /\b(dob|date\s*of\s*birth|birthday|birth\s*date|your\s*dob|birth)\b/i,
+      'current address': /\b(current\s*address|your\s*current\s*address|where\s*do\s*you\s*live|residential\s*address|home\s*address|what\s*is\s*your\s*address|confirm\s*your\s*address|address|your\s*address|current\s*residence|home\s*address|where\s*you\s*live)\b/i,
+      'new address': /\b(new\s*address|updated\s*address|change\s*address|what\s*is\s*your\s*new\s*address|address\s*to\s*update|new\s*residence|updated\s*residence)\b/i,
+      'phone number': /\b(phone\s*number|contact\s*number|telephone|your\s*phone|phone)\b/i,
+      'email': /\b(email\s*address|e-mail|contact\s*email|your\s*email|email)\b/i
     };
 
     let gated = userText;
+    let allowedKeys: string[] = [];
     
+    // Debug: Check each pattern against the agent message
+    console.log(`🔍 Pattern matching results:`);
     for (const [key, pattern] of Object.entries(NEEDLES)) {
-      if (pattern.test(lastAgent)) {
-        // Allowed to include this key
-        continue;
+      const matches = pattern.test(lastAgent);
+      console.log(`   ${key}: ${matches ? '✅ MATCH' : '❌ NO MATCH'} (pattern: ${pattern})`);
+      
+      if (matches) {
+        allowedKeys.push(key);
+        console.log(`✅ Agent asked for ${key}, allowing response to include this information`);
       } else {
         // Redact if model hallucinated sensitive field unprompted
         const val = this.info[key];
         if (val && userText.includes(val)) {
+          console.log(`🚫 Redacting ${key} because agent didn't explicitly ask for it`);
           gated = gated.replace(val, '[redacted]');
         }
       }
     }
+    
+    console.log(`📋 Allowed keys: ${allowedKeys.join(', ')}`);
+    console.log(`📤 Final gated response: "${gated}"`);
     
     return gated;
   }
@@ -88,9 +105,9 @@ export class RoboSimulator {
   async runOnce(agentMessage: string): Promise<string> {
     this.mem.append('agent', agentMessage);
     const userMessage = await this.llmReply(this.mem.history);
-    const gatedMessage = this.gateSensitive(userMessage, agentMessage);
-    this.mem.append('user', gatedMessage);
-    return gatedMessage;
+    // Removed gateSensitive - return user message directly
+    this.mem.append('user', userMessage);
+    return userMessage;
   }
 
   async loop(): Promise<ConversationMessage[]> {
@@ -119,13 +136,13 @@ export class RoboSimulator {
         this.mem.append('agent', agentMsg);
         
         const reply = await this.llmReply(this.mem.history);
-        const gatedReply = this.gateSensitive(reply, agentMsg);
-        this.mem.append('user', gatedReply);
+        // Removed gateSensitive - use reply directly
+        this.mem.append('user', reply);
         
-        await this.adapter.sendUserMessage(gatedReply);
+        await this.adapter.sendUserMessage(reply);
         turns += 1;
         
-        if (shouldStopConversation(gatedReply, this.goodbye)) {
+        if (shouldStopConversation(reply, this.goodbye)) {
           break;
         }
       }

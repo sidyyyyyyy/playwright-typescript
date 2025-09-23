@@ -16,4 +16,8 @@ export const localConfig = {
   ...baseConfig,
   environment: TestEnvironment.LOCAL,
   workers: 10,
+  use: {
+    ...baseConfig.use,
+    headless: false, // Force headed mode for local development
+  },
 };

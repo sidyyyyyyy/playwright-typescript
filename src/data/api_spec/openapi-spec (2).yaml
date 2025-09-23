@@ -1,0 +1,512 @@
+openapi: 3.1.0
+info:
+  title: Circle Health Member Services API
+  description: APIs for Circle Health Member Services including authentication,
+    demographics, ID cards, PCP change, referrals, and eligibility.
+  version: 1.0.0
+servers:
+  - url: https://aiagents.ushur.dev
+    description: Production server
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MemberAuthenticationRequest:
+      type: object
+      description: Request payload for authenticating a member using their ID and date
+        of birth
+      required:
+        - memberId
+        - dateOfBirth
+      properties:
+        memberId:
+          type: string
+          description: Unique identifier of the member
+        dateOfBirth:
+          type: string
+          description: "Member's date of birth for verification (Format: YYYY-MM-DD)"
+    MemberAuthenticationResponse:
+      type: object
+      description: Response containing member authentication status, eligibility
+        information, and access token
+      properties:
+        IsAuthenticated:
+          type: boolean
+          description: Indicates if the member was successfully authenticated
+        IsEligible:
+          type: boolean
+          description: Indicates if the member is currently eligible for services
+        accessToken:
+          type: string
+          description: JWT token to be used as Bearer token for member related APIs. This
+            token contains encrypted member information and should be included
+            in the Authorization header as 'Bearer {token}'
+    MemberDemographicsRequest:
+      type: object
+      description: Request to retrieve member's demographic information
+      properties:
+        MemberNumber:
+          type: string
+          description: Unique member identification number
+    MemberDemographicsResponse:
+      type: object
+      description: Response containing member's detailed demographic information
+      properties:
+        FirstName:
+          type: string
+          description: Member's first name
+        LastName:
+          type: string
+          description: Member's last name
+        Address:
+          type: string
+          description: Member's primary street address
+        City:
+          type: string
+          description: City of residence
+        State:
+          type: string
+          description: State of residence
+        Zip:
+          type: string
+          description: ZIP/Postal code
+        Phone1:
+          type: string
+          description: Primary contact phone number
+        DateOfBirth:
+          type: string
+          description: "Member's date of birth (Format: YYYY-MM-DD)"
+        PrefSpokenLanguage:
+          type: string
+          description: Member's preferred language for verbal communication
+        PrefWrittenLanguage:
+          type: string
+          description: Member's preferred language for written communication
+    MemberDemographicsUpdateRequest:
+      type: object
+      description: Request to update member's address and contact information
+      required:
+        - SubscriberId
+        - Address
+        - City
+        - State
+        - Zip
+      properties:
+        SubscriberId:
+          type: string
+          description: Unique identifier of the subscriber/member
+        Address:
+          type: string
+          description: New primary street address
+        Address2:
+          type: string
+          description: Additional address information (apt, suite, etc.) - Optional
+        City:
+          type: string
+          description: New city of residence
+        State:
+          type: string
+          description: New state of residence
+        Zip:
+          type: string
+          description: New ZIP/Postal code
+    MemberCardOrderRequest:
+      type: object
+      description: Request to order a new member ID card
+      required:
+        - MemberNumber
+        - Source
+        - LineOfBusiness
+        - RequestedBy
+      properties:
+        MemberNumber:
+          type: string
+          description: Member number for whom the card is being ordered
+        Source:
+          type: string
+          description: System or channel initiating the card order
+        LineOfBusiness:
+          type: string
+          description: "Type of insurance product or line of business. Default: Health"
+        RequestedBy:
+          type: string
+          description: "User or System requesting the card. Default: Member"
+    MemberCardOrderResponse:
+      type: object
+      description: Response containing details of the ID card order
+      properties:
+        MemberIdCardRequestKey:
+          type: integer
+          description: Unique identifier for tracking the card request
+        MemberNumber:
+          type: string
+          description: Member number for whom the card was ordered
+        DateRequested:
+          type: string
+          description: "Date when the card order was placed (Format: YYYY-MM-DD)"
+        Source:
+          type: string
+          description: System or channel that processed the order
+    MemberCardStatusRequest:
+      type: object
+      description: Request to check the status of a member ID card order
+      required:
+        - MemberNumber
+      properties:
+        MemberNumber:
+          type: string
+          description: Member number to check card status for
+    MemberCardStatusResponse:
+      type: object
+      description: Response containing the current status of an ID card order
+      properties:
+        Status:
+          type: string
+          description: Current status of the card order (e.g., Pending, Processing,
+            Shipped, Delivered)
+        RequestedDate:
+          type: string
+          description: "Date when the card was originally requested (Format: YYYY-MM-DD)"
+    SuccessResponse:
+      type: object
+      description: Generic success response containing a message
+      properties:
+        message:
+          type: string
+          description: Success message or additional information about the operation
+    PhysicianSearchRequest:
+      type: object
+      description: Request to search for physicians based on location and preferences
+      required:
+        - zipCode
+      properties:
+        zipCode:
+          type: string
+          description: 5-digit zip code to search for physicians
+        radius:
+          type: number
+          description: Search radius in miles (optional)
+          default: 10
+        specialty:
+          type: string
+          description: Physician specialty filter (optional)
+        language:
+          type: string
+          description: Preferred language filter (optional)
+    PhysicianDetails:
+      type: object
+      description: Detailed information about a physician including practice details
+        and specialties
+      properties:
+        physicianId:
+          type: string
+          description: Unique identifier for the physician
+        firstName:
+          type: string
+          description: Physician's first name
+        lastName:
+          type: string
+          description: Physician's last name
+        specialty:
+          type: string
+          description: Physician's specialty
+        practiceName:
+          type: string
+          description: Name of the practice
+        address:
+          type: string
+          description: Practice address
+        city:
+          type: string
+          description: Practice city
+        state:
+          type: string
+          description: Practice state
+        zipCode:
+          type: string
+          description: Practice zip code
+        phone:
+          type: string
+          description: Practice phone number
+        languages:
+          type: array
+          items:
+            type: string
+          description: Languages spoken by the physician
+        acceptingNewPatients:
+          type: boolean
+          description: Whether the physician is accepting new patients
+    PhysicianSearchResponse:
+      type: object
+      description: Response containing search results for physicians matching the
+        search criteria
+      properties:
+        physicians:
+          type: array
+          items:
+            $ref: "#/components/schemas/PhysicianDetails"
+          description: List of physicians matching the search criteria
+        totalCount:
+          type: integer
+          description: Total number of physicians found
+    PCPChangeRequest:
+      type: object
+      description: Request to update a member's Primary Care Physician (PCP)
+      required:
+        - memberId
+        - physicianId
+        - effectiveDate
+      properties:
+        memberId:
+          type: string
+          description: Member's unique identifier
+        physicianId:
+          type: string
+          description: Selected physician's unique identifier
+        effectiveDate:
+          type: string
+          format: date
+          description: "Date when the PCP change should take effect (Format: YYYY-MM-DD)"
+        reason:
+          type: string
+          description: Optional reason for the PCP change
+    MemberEligibilityResponse:
+      type: object
+      properties:
+        Result:
+          type: array
+          items:
+            type: object
+            properties:
+              FirstName:
+                type: string
+              LastName:
+                type: string
+              EligibilityStatusDescription:
+                type: string
+              EffectiveDate:
+                type: string
+                description: "Start date of eligibility (Format: YYYY-MM-DD)"
+              TerminationDate:
+                type: string
+                description: "End date of eligibility if applicable (Format: YYYY-MM-DD)"
+security:
+  - BearerAuth: []
+tags:
+  - name: AuthN & AuthZ
+  - name: Member / Demographics
+  - name: Member / Cards
+  - name: Member / PCP
+  - name: Member / Referrals
+  - name: Physicians
+paths:
+  /api/member/authentication:
+    post:
+      operationId: authenticateMember
+      tags:
+        - AuthN & AuthZ
+      summary: Member Authentication
+      description: Authenticate a member with their Member ID and DOB.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberAuthenticationRequest"
+      responses:
+        "200":
+          description: Member authenticated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberAuthenticationResponse"
+  /api/member/demographics:
+    post:
+      operationId: getMemberDemographics
+      tags:
+        - Member / Demographics
+      summary: Fetch Member Demographics
+      description: Retrieve demographic details of a member.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberDemographicsRequest"
+      responses:
+        "200":
+          description: Demographics fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberDemographicsResponse"
+  /api/member/demographics/update:
+    post:
+      operationId: updateMemberDemographics
+      tags:
+        - Member / Demographics
+      summary: Update Member Address
+      description: Update the address and contact details of a member.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberDemographicsUpdateRequest"
+      responses:
+        "200":
+          description: Demographics updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+  /api/member/card:
+    post:
+      operationId: orderMemberCard
+      tags:
+        - Member / Cards
+      summary: Order Member ID Card
+      description: Order a new Member ID Card.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberCardOrderRequest"
+      responses:
+        "200":
+          description: Card order placed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberCardOrderResponse"
+  /api/member/card/status:
+    post:
+      operationId: getMemberCardStatus
+      tags:
+        - Member / Cards
+      summary: Get Member ID Card Status
+      description: Retrieve the status of ID card request.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberCardStatusRequest"
+      responses:
+        "200":
+          description: Card status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberCardStatusResponse"
+  /api/physicians/search:
+    post:
+      operationId: searchPhysiciansByZipCode
+      tags:
+        - Physicians
+      summary: Search Physicians by Zip Code
+      description: Retrieve a list of physicians based on zip code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhysicianSearchRequest"
+      responses:
+        "200":
+          description: List of physicians retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhysicianSearchResponse"
+  /api/physicians:
+    post:
+      operationId: createPhysician
+      tags:
+        - Physicians
+      summary: Create Physician
+      description: Create a new physician record.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhysicianDetails"
+      responses:
+        "201":
+          description: Physician created successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+  /api/physicians/{physicianId}:
+    get:
+      operationId: getPhysicianById
+      tags:
+        - Physicians
+      summary: Get Physician
+      description: Retrieve details of a specific physician.
+      parameters:
+        - name: physicianId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Physician details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhysicianDetails"
+  /api/physicians/pcp/change:
+    post:
+      operationId: updateMemberPCP
+      tags:
+        - Member / PCP
+      summary: Update Member's Primary Care Physician
+      description: Update the member's primary care physician with the selected
+        physician details.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PCPChangeRequest"
+      responses:
+        "200":
+          description: PCP updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+  /api/physicians/pcp/{memberId}:
+    get:
+      operationId: getMemberPCP
+      tags:
+        - Member / PCP
+      summary: Get Member's PCP
+      description: Retrieve the current primary care physician for a member.
+      parameters:
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: PCP details retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  physicianId:
+                    type: string
+                  effectiveDate:
+                    type: string
+                    format: date

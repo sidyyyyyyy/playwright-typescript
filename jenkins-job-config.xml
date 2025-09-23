@@ -1,0 +1,175 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<flow-definition plugin="workflow-job@2.45">
+  <description>Agent Evaluation Test Suite - Runs Client Services and RoboSim agent evaluation tests</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>TEST_SUITE</name>
+          <description>Select which test suite to run</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>both</string>
+              <string>client-services</string>
+              <string>robo-sim</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.ChoiceParameterDefinition>
+          <name>BROWSER</name>
+          <description>Select browser(s) to run tests on</description>
+          <choices class="java.util.Arrays$ArrayList">
+            <a class="string-array">
+              <string>chromium</string>
+              <string>firefox</string>
+              <string>webkit</string>
+              <string>all</string>
+            </a>
+          </choices>
+        </hudson.model.ChoiceParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>HEADLESS</name>
+          <description>Run tests in headless mode</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>GENERATE_REPORT</name>
+          <description>Generate HTML report after test completion</description>
+          <defaultValue>true</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>TEST_TIMEOUT</name>
+          <description>Test timeout in milliseconds (default: 5 minutes)</description>
+          <defaultValue>300000</defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@2.94">
+    <script>pipeline {
+    agent any
+    
+    environment {
+        NODE_VERSION = '18'
+        PLAYWRIGHT_BROWSERS_PATH = '0'
+        CI = 'true'
+    }
+    
+    stages {
+        stage('Checkout') {
+            steps {
+                echo '🔍 Checking out source code...'
+                checkout scm
+            }
+        }
+        
+        stage('Environment Setup') {
+            steps {
+                echo '🔧 Setting up environment...'
+                script {
+                    if (!fileExists('.env')) {
+                        error '❌ .env file not found. Please ensure environment variables are configured.'
+                    }
+                    
+                    sh '''
+                        echo "📋 Environment Information:"
+                        echo "Node.js version: $(node --version)"
+                        echo "NPM version: $(npm --version)"
+                        echo "Working directory: $(pwd)"
+                    '''
+                }
+            }
+        }
+        
+        stage('Dependencies Installation') {
+            steps {
+                echo '📦 Installing dependencies...'
+                sh '''
+                    echo "Installing Node.js dependencies..."
+                    npm ci
+                    
+                    echo "Installing Playwright browsers..."
+                    npx playwright install --with-deps
+                    
+                    echo "Verifying Playwright installation..."
+                    npx playwright --version
+                '''
+            }
+        }
+        
+        stage('Test Execution') {
+            parallel {
+                stage('Client Services Agent Evaluation') {
+                    when {
+                        anyOf {
+                            params.TEST_SUITE == 'both'
+                            params.TEST_SUITE == 'client-services'
+                        }
+                    }
+                    steps {
+                        echo '🤖 Running Client Services Agent Evaluation...'
+                        sh """
+                            npx playwright test src/tests/faq-evaluation/client-services-agent-evaluation.spec.ts \\
+                                --project=${params.BROWSER} \\
+                                --timeout=${params.TEST_TIMEOUT} \\
+                                ${params.HEADLESS ? '--headed=false' : '--headed=true'} \\
+                                --reporter=html,json \\
+                                --output-dir=reports/client-services-${params.BROWSER}
+                        """
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'reports/client-services-*/**', allowEmptyArchive: true
+                        }
+                    }
+                }
+                
+                stage('RoboSim Agent Preview Integration') {
+                    when {
+                        anyOf {
+                            params.TEST_SUITE == 'both'
+                            params.TEST_SUITE == 'robo-sim'
+                        }
+                    }
+                    steps {
+                        echo '🤖 Running RoboSim Agent Preview Integration...'
+                        sh """
+                            npx playwright test src/tests/faq-evaluation/robo-sim-agent-preview-integration.spec.ts \\
+                                --project=${params.BROWSER} \\
+                                --timeout=${params.TEST_TIMEOUT} \\
+                                ${params.HEADLESS ? '--headed=false' : '--headed=true'} \\
+                                --reporter=html,json \\
+                                --output-dir=reports/robo-sim-${params.BROWSER}
+                        """
+                    }
+                    post {
+                        always {
+                            archiveArtifacts artifacts: 'reports/robo-sim-*/**', allowEmptyArchive: true
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    post {
+        always {
+            echo '🧹 Cleaning up...'
+            archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
+        }
+        
+        success {
+            echo '✅ All tests completed successfully!'
+        }
+        
+        failure {
+            echo '❌ Test execution failed!'
+        }
+    }
+}</script>
+    <sandbox>true</sandbox>
+  </definition>
+  <triggers/>
+  <disabled>false</disabled>
+</flow-definition>
