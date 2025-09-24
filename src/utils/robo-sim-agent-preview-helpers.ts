@@ -313,7 +313,7 @@ export const agentPreviewTestData = {
   }]
 };
 
-// Agent configuration for the preview integration
+// Agent configurations for different agent types
 export const agentPreviewConfiguration = {
   type: 'HealthPlan',
   description: 'Health Plan Member Engagement System for automated testing with RoboSim integration',
@@ -325,6 +325,54 @@ export const agentPreviewConfiguration = {
   empathy: 'High',
   readability: 'Grade 6',
   useCaseTemplate: 'healthplan_001',
+  capName: 'Knowledge Base',
+  capIndex: 0,
+  taskId: 'task_002',
+  taskName: 'Update Address',
+  additionalTasks: [
+    {
+      id: 'task_002',
+      name: 'Update Address',
+      type: 'Tasks'
+    }
+  ]
+};
+
+export const clientServicesAgentConfiguration = {
+  type: 'ClientServices',
+  description: 'The Client Services Engagement System supports banking customers by answering questions about account features, fee explanations, debit or credit card issues, basic product comparisons, and everyday transaction guidance. Clients simply ask their questions and the system promptly provides accurate information or next‑step directions. The goal is to make every interaction with the financial institution seamless, informative, and satisfying for each client.',
+  friendly: 'Gentle Jamie',
+  greet: 'Hello! Finding your way through the complexities of your options can be tough. I\'m here to help.',
+  personaId: 'persona_006',
+  tone: 'Professional',
+  formality: 'Casual',
+  empathy: 'Low',
+  readability: 'College Readability',
+  useCaseTemplate: 'clientservices_001',
+  capName: 'Knowledge Base',
+  capIndex: 0,
+  taskId: 'task_002',
+  taskName: 'Update Address',
+  additionalTasks: [
+    {
+      id: 'task_002',
+      name: 'Update Address',
+      type: 'Tasks'
+    }
+  ]
+};
+
+export const policyHolderAgentConfiguration = {
+  type: 'PolicyHolder',
+  description: 'The Policyholder Engagement System helps insurance customers navigate their policies by clarifying coverage, explaining billing, guiding them on claim filing and status timelines, and answering endorsement questions. Policyholders can ask any policy-related question and receive precise information or step-by-step guidance. The system is committed to making every interaction with the insurer seamless, informative, and satisfying for policyholders.',
+  friendly: 'Factual Fred',
+  greet: 'Hello. I\'m ready to provide information — what do you need assistance with?',
+  personaId: 'persona_002',
+  tone: 'Professional',
+  formality: 'Casual',
+  empathy: 'Low',
+  readability: 'College Readability',
+  useCaseTemplate: 'policyholder_001',
   capName: 'Knowledge Base',
   capIndex: 0,
   taskId: 'task_002',
